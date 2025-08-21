@@ -3140,10 +3140,10 @@ Returns a new tensor with the cosine  of the elements of :attr:`input`.
 .. math::
     \text{out}_{i} = \cos(\text{input}_{i})
 """
-    + r"""
+    + f"""
 Args:
-    {input}
-
+    {common_args['input']}"""[:-1] + ", in radians."
+    + r"""
 Keyword args:
     {out}
 
@@ -9925,10 +9925,11 @@ Returns a new tensor with the sine of the elements of :attr:`input`.
 .. math::
     \text{out}_{i} = \sin(\text{input}_{i})
 """
-    + r"""
+    + f"""
 Args:
-    {input}
+    {common_args['input']}"""[:-1] + ", in radians."
 
+    + r"""
 Keyword args:
     {out}
 
@@ -11340,10 +11341,10 @@ Returns a new tensor with the tangent of the elements of :attr:`input`.
 .. math::
     \text{out}_{i} = \tan(\text{input}_{i})
 """
-    + r"""
+    + f"""
 Args:
-    {input}
-
+    {common_args['input']}"""[:-1] + ", in radians."
+    + r"""
 Keyword args:
     {out}
 
