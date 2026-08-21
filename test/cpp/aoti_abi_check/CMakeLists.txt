@@ -23,6 +23,7 @@ set(AOTI_ABI_CHECK_TEST_SRCS
   ${AOTI_ABI_CHECK_TEST_ROOT}/test_load.cpp
   ${AOTI_ABI_CHECK_TEST_ROOT}/test_macros.cpp
   ${AOTI_ABI_CHECK_TEST_ROOT}/test_math.cpp
+  ${AOTI_ABI_CHECK_TEST_ROOT}/test_math_special_functions.cpp
   ${AOTI_ABI_CHECK_TEST_ROOT}/test_mathconstants.cpp
   ${AOTI_ABI_CHECK_TEST_ROOT}/test_memoryformat.cpp
   ${AOTI_ABI_CHECK_TEST_ROOT}/test_metaprogramming.cpp
