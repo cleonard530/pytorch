@@ -119,6 +119,11 @@ angle_impl
 real_impl
 imag_impl
 conj_impl
+ceil_impl
+sgn_impl
+floor_impl
+round_impl
+trunc_impl
 max_impl
 min_impl
 

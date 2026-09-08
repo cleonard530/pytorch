@@ -145,7 +145,7 @@ namespace c10 {
 //  - thrust::complex only support float and double
 
 template <typename T>
-struct C10_EXPORT alignas(sizeof(T) * 2) complex {
+struct alignas(sizeof(T) * 2) complex {
   using value_type = T;
 
   T real_ = T(0);
@@ -541,7 +541,7 @@ C10_HOST_DEVICE complex<T> polar(const T& r, const T& theta = T()) {
 }
 
 template <>
-struct C10_EXPORT alignas(4) complex<Half> {
+struct alignas(4) complex<Half> {
   Half real_;
   Half imag_;
 

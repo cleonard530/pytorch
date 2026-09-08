@@ -555,7 +555,6 @@ const auto i0_string = jiterator_stringify(
   }
 ); // i0_string
 
-
 const auto i1_string = jiterator_stringify(
   template<typename T>
   T chbevl(const T x, const T array[], const int len) {

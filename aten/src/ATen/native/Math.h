@@ -15,6 +15,17 @@
 
 #include <torch/headeronly/native/Math.h>
 
+
+C10_CLANG_DIAGNOSTIC_PUSH()
+#if C10_CLANG_HAS_WARNING("-Wimplicit-float-conversion")
+C10_CLANG_DIAGNOSTIC_IGNORE("-Wimplicit-float-conversion")
+#endif
+
+/*
+ * This function is derived from the implementation of the zeta function in the
+ * Cephes Math Library. See note [3-Clause BSD License for the Cephes Math
+ * Library].
+ */
 template <typename scalar_t, bool is_cuda = false>
 C10_HOST_DEVICE inline scalar_t zeta(scalar_t x, scalar_t q)
     __ubsan_ignore_float_divide_by_zero__ {
@@ -340,10 +351,6 @@ inline c10::Half calc_i1e(c10::Half a) {
   return calc_i1e(static_cast<float>(a));
 }
 
-C10_CLANG_DIAGNOSTIC_PUSH()
-#if C10_CLANG_HAS_WARNING("-Wimplicit-float-conversion")
-C10_CLANG_DIAGNOSTIC_IGNORE("-Wimplicit-float-conversion")
-#endif
 
 /*
  * This function is derived from the implementation of the i1e function in the Cephes Math Library.

@@ -51,3 +51,33 @@ TEST(TestZmath, TestConjImpl) {
   EXPECT_FLOAT_EQ(z.real(), 1.0f);
   EXPECT_FLOAT_EQ(z.imag(), -2.0f);
 }
+
+TEST(TestZmath, TestRoundingImpls) {
+  using Complex = torch::headeronly::complex<float>;
+
+  const auto ceil = torch::headeronly::native::ceil_impl(Complex(1.2f, -2.8f));
+  EXPECT_FLOAT_EQ(ceil.real(), 2.0f);
+  EXPECT_FLOAT_EQ(ceil.imag(), -2.0f);
+
+  const auto floor =
+      torch::headeronly::native::floor_impl(Complex(1.2f, -2.8f));
+  EXPECT_FLOAT_EQ(floor.real(), 1.0f);
+  EXPECT_FLOAT_EQ(floor.imag(), -3.0f);
+
+  const auto round =
+      torch::headeronly::native::round_impl(Complex(1.6f, -2.4f));
+  EXPECT_FLOAT_EQ(round.real(), 2.0f);
+  EXPECT_FLOAT_EQ(round.imag(), -2.0f);
+
+  const auto trunc =
+      torch::headeronly::native::trunc_impl(Complex(1.8f, -2.8f));
+  EXPECT_FLOAT_EQ(trunc.real(), 1.0f);
+  EXPECT_FLOAT_EQ(trunc.imag(), -2.0f);
+}
+
+TEST(TestZmath, TestSgnImpl) {
+  using Complex = torch::headeronly::complex<float>;
+  const auto sign = torch::headeronly::native::sgn_impl(Complex(3.0f, 4.0f));
+  EXPECT_FLOAT_EQ(sign.real(), 0.6f);
+  EXPECT_FLOAT_EQ(sign.imag(), 0.8f);
+}
