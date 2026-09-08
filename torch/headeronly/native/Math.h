@@ -1,7 +1,6 @@
 #pragma once
 
 #include <torch/headeronly/macros/Macros.h>
-#include <torch/headeronly/util/AccumulateType.h>
 #include <torch/headeronly/util/BFloat16.h>
 #include <torch/headeronly/util/Half.h>
 #include <torch/headeronly/util/MathConstants.h>
@@ -165,83 +164,6 @@ inline typename std::enable_if_t<std::is_floating_point_v<T>, T> calc_erfinv(
  * Cephes Math Library. See note [3-Clause BSD License for the Cephes Math
  * Library].
  */
-template <typename scalar_t, bool is_cuda = false>
-C10_HOST_DEVICE inline scalar_t zeta(scalar_t x, scalar_t q)
-    __ubsan_ignore_float_divide_by_zero__ {
-  using acc_t = acc_type<scalar_t, is_cuda>;
-  const acc_t MACHEP = acc_t{1.11022302462515654042E-16};
-  constexpr acc_t zero = acc_t{0.0};
-  constexpr acc_t half = acc_t{0.5};
-  constexpr acc_t one = acc_t{1.0};
-  static const acc_t A[] = {
-      12.0,
-      -720.0,
-      30240.0,
-      -1209600.0,
-      47900160.0,
-      -1.8924375803183791606e9, /*1.307674368e12/691*/
-      7.47242496e10,
-      -2.950130727918164224e12, /*1.067062284288e16/3617*/
-      1.1646782814350067249e14, /*5.109094217170944e18/43867*/
-      -4.5979787224074726105e15, /*8.028576626982912e20/174611*/
-      1.8152105401943546773e17, /*1.5511210043330985984e23/854513*/
-      -7.1661652561756670113e18 /*1.6938241367317436694528e27/236364091*/
-  };
-
-  acc_t a, b, k, s, t, w;
-  if (x == one) {
-    return std::numeric_limits<scalar_t>::infinity();
-  }
-
-  if (x < one) {
-    return std::numeric_limits<scalar_t>::quiet_NaN();
-  }
-
-  if (q <= zero) {
-    if (q == std::floor(q)) {
-      return std::numeric_limits<scalar_t>::infinity();
-    }
-    if (x != std::floor(x)) {
-      return std::numeric_limits<scalar_t>::quiet_NaN();
-    }
-  }
-
-  s = std::pow(q, -x);
-  a = q;
-  int i = 0;
-  b = zero;
-  while ((i < 9) || (a <= acc_t{9.0})) {
-    i += 1;
-    a += one;
-    b = ::pow(a, -x);
-    s += b;
-    if ((-MACHEP * s < b) && (b < MACHEP * s)) {
-      return static_cast<scalar_t>(s);
-    }
-  };
-
-  w = a;
-  s += b * w / (x - one);
-  s -= half * b;
-  a = one;
-  k = zero;
-  for (i = 0; i < 12; i++) {
-    a *= x + k;
-    b /= w;
-    t = a * b / A[i];
-    s = s + t;
-    t = ::fabs(t / s);
-    if (t < MACHEP) {
-      return static_cast<scalar_t>(s);
-    }
-    k += one;
-    a *= x + k;
-    b /= w;
-    k += one;
-  }
-  return static_cast<scalar_t>(s);
-}
-
 /*
  * This function is derived from the implementation of the digamma function in
  * the Cephes Math Library. See note [3-Clause BSD License for the Cephes Math
@@ -265,46 +187,6 @@ C10_HOST_DEVICE inline T polevl(const T x, const T A[], size_t len) {
     result = result * x + A[i];
   }
   return result;
-}
-
-inline double trigamma(double x) __ubsan_ignore_float_divide_by_zero__ {
-  double sign = +1;
-  double result = 0;
-  if (x < 0.5) {
-    sign = -1;
-    const double sin_pi_x = sin(pi<double> * x);
-    result -= (pi<double> * pi<double>) / (sin_pi_x * sin_pi_x);
-    x = 1 - x;
-  }
-  for (int i = 0; i < 6; ++i) {
-    result += 1 / (x * x);
-    x += 1;
-  }
-  const double ixx = 1 / (x * x);
-  result +=
-      (1 + 1 / (2 * x) + ixx * (1. / 6 - ixx * (1. / 30 - ixx * (1. / 42)))) /
-      x;
-  return sign * result;
-}
-
-inline float trigamma(float x) __ubsan_ignore_float_divide_by_zero__ {
-  float sign = +1;
-  float result = 0;
-  if (x < 0.5f) {
-    sign = -1;
-    const float sin_pi_x = sinf(pi<float> * x);
-    result -= (pi<float> * pi<float>) / (sin_pi_x * sin_pi_x);
-    x = 1 - x;
-  }
-  for (int i = 0; i < 6; ++i) {
-    result += 1 / (x * x);
-    x += 1;
-  }
-  const float ixx = 1 / (x * x);
-  result += (1 + 1 / (2 * x) +
-             ixx * (1.f / 6 - ixx * (1.f / 30 - ixx * (1.f / 42)))) /
-      x;
-  return sign * result;
 }
 
 /*
@@ -435,15 +317,6 @@ inline BFloat16 calc_digamma(BFloat16 a) {
 
 inline Half calc_digamma(Half a) {
   return calc_digamma(static_cast<float>(a));
-}
-
-template <typename scalar_t, bool is_cuda = false>
-inline C10_HOST_DEVICE scalar_t calc_polygamma(scalar_t x, int n) {
-  // already blocked if n <= 1
-  const auto one = scalar_t{1};
-  return ((n % 2) ? one : -one) *
-      std::exp(std::lgamma(static_cast<scalar_t>(n) + one)) *
-      zeta<scalar_t, is_cuda>(static_cast<scalar_t>(n + 1), x);
 }
 
 // regularized lower incomplete gamma
@@ -1182,27 +1055,6 @@ inline BFloat16 calc_erfinv(BFloat16 a) {
   return calc_erfinv(float(a));
 }
 
-template <typename T>
-inline T abs_impl(T v) {
-  return std::abs(v);
-}
-
-template <>
-[[maybe_unused]] inline uint8_t abs_impl(uint8_t v) {
-  return v;
-}
-
-template <typename T>
-inline typename std::enable_if_t<std::is_integral_v<T>, T> calc_gcd(T a, T b) {
-  a = abs_impl(a);
-  b = abs_impl(b);
-  while (a != 0) {
-    T c = a;
-    a = b % a;
-    b = c;
-  }
-  return b;
-}
 
 template <typename T>
 C10_HOST_DEVICE T exp2_impl(T x) {
@@ -1325,112 +1177,6 @@ inline std::tuple<const T*, size_t> chebyshev_coefficients_i0e_B() {
 }
 
 template <typename T>
-inline typename std::
-    enable_if_t<std::is_same_v<double, T>, std::tuple<const T*, size_t>>
-    chebyshev_coefficients_i1e_A() {
-  /* Chebyshev coefficients for exp(-x) I1(x)
-   * in the interval [0,8].
-   *
-   * lim(x->0){ exp(-x) I1(x) / x } = 1/2.
-   */
-  static const T coeff[] = {
-      2.77791411276104639959E-18, -2.11142121435816608115E-17,
-      1.55363195773620046921E-16, -1.10559694773538630805E-15,
-      7.60068429473540693410E-15, -5.04218550472791168711E-14,
-      3.22379336594557470981E-13, -1.98397439776494371520E-12,
-      1.17361862988909016308E-11, -6.66348972350202774223E-11,
-      3.62559028155211703701E-10, -1.88724975172282928790E-9,
-      9.38153738649577178388E-9,  -4.44505912879632808065E-8,
-      2.00329475355213526229E-7,  -8.56872026469545474066E-7,
-      3.47025130813767847674E-6,  -1.32731636560394358279E-5,
-      4.78156510755005422638E-5,  -1.61760815825896745588E-4,
-      5.12285956168575772895E-4,  -1.51357245063125314899E-3,
-      4.15642294431288815669E-3,  -1.05640848946261981558E-2,
-      2.47264490306265168283E-2,  -5.29459812080949914269E-2,
-      1.02643658689847095384E-1,  -1.76416518357834055153E-1,
-      2.52587186443633654823E-1};
-  return std::make_tuple(coeff, 29);
-}
-
-template <typename T>
-inline typename std::
-    enable_if_t<std::is_same_v<float, T>, std::tuple<const T*, size_t>>
-    chebyshev_coefficients_i1e_A() {
-  /* Chebyshev coefficients for exp(-x) I1(x)
-   * in the interval [0,8].
-   *
-   * lim(x->0){ exp(-x) I1(x) / x } = 1/2.
-   */
-  static const T coeff[] = {
-      9.38153738649577178388E-9f,
-      -4.44505912879632808065E-8f,
-      2.00329475355213526229E-7f,
-      -8.56872026469545474066E-7f,
-      3.47025130813767847674E-6f,
-      -1.32731636560394358279E-5f,
-      4.78156510755005422638E-5f,
-      -1.61760815825896745588E-4f,
-      5.12285956168575772895E-4f,
-      -1.51357245063125314899E-3f,
-      4.15642294431288815669E-3f,
-      -1.05640848946261981558E-2f,
-      2.47264490306265168283E-2f,
-      -5.29459812080949914269E-2f,
-      1.02643658689847095384E-1f,
-      -1.76416518357834055153E-1f,
-      2.52587186443633654823E-1f};
-  return std::make_tuple(coeff, 17);
-}
-
-template <typename T>
-inline typename std::
-    enable_if_t<std::is_same_v<double, T>, std::tuple<const T*, size_t>>
-    chebyshev_coefficients_i1e_B() {
-  /* Chebyshev coefficients for exp(-x) sqrt(x) I1(x)
-   * in the inverted interval [8,infinity].
-   *
-   * lim(x->inf){ exp(-x) sqrt(x) I1(x) } = 1/sqrt(2pi).
-   */
-  static const T coeff[] = {
-      7.51729631084210481353E-18,  4.41434832307170791151E-18,
-      -4.65030536848935832153E-17, -3.20952592199342395980E-17,
-      2.96262899764595013876E-16,  3.30820231092092828324E-16,
-      -1.88035477551078244854E-15, -3.81440307243700780478E-15,
-      1.04202769841288027642E-14,  4.27244001671195135429E-14,
-      -2.10154184277266431302E-14, -4.08355111109219731823E-13,
-      -7.19855177624590851209E-13, 2.03562854414708950722E-12,
-      1.41258074366137813316E-11,  3.25260358301548823856E-11,
-      -1.89749581235054123450E-11, -5.58974346219658380687E-10,
-      -3.83538038596423702205E-9,  -2.63146884688951950684E-8,
-      -2.51223623787020892529E-7,  -3.88256480887769039346E-6,
-      -1.10588938762623716291E-4,  -9.76109749136146840777E-3,
-      7.78576235018280120474E-1};
-
-  return std::make_tuple(coeff, 25);
-}
-
-template <typename T>
-inline typename std::
-    enable_if_t<std::is_same_v<float, T>, std::tuple<const T*, size_t>>
-    chebyshev_coefficients_i1e_B() {
-  /* Chebyshev coefficients for exp(-x) sqrt(x) I1(x)
-   * in the inverted interval [8,infinity].
-   *
-   * lim(x->inf){ exp(-x) sqrt(x) I1(x) } = 1/sqrt(2pi).
-   */
-  static const T coeff[] = {
-      -3.83538038596423702205E-9f,
-      -2.63146884688951950684E-8f,
-      -2.51223623787020892529E-7f,
-      -3.88256480887769039346E-6f,
-      -1.10588938762623716291E-4f,
-      -9.76109749136146840777E-3f,
-      7.78576235018280120474E-1f};
-
-  return std::make_tuple(coeff, 7);
-}
-
-template <typename T>
 inline typename std::enable_if_t<std::is_floating_point_v<T>, T> calc_i0(T _x) {
   T x = std::abs(_x);
 
@@ -1473,98 +1219,18 @@ inline Half calc_i0e(Half a) {
   return calc_i0e(static_cast<float>(a));
 }
 
-/*
- * This function is derived from the implementation of the i1 function in the
- * Cephes Math Library. See note [3-Clause BSD License for the Cephes Math
- * Library].
- *
- * Computes an approximation of the first order modified Bessel function of the
- * first kind. The approximation is actually two (sub)approximations, both using
- * a Chebyshev polynomial expansion. One approximates the function over [0, 8],
- * and the other over (8, infinity). This function takes the absolute value of
- * all inputs to convert them into the domain of the approximation.
- */
-template <typename T>
-inline typename std::enable_if_t<std::is_floating_point_v<T>, T> calc_i1(T _x) {
-  T x = std::abs(_x);
-
-  if (x <= T{8.0}) {
-    auto [A, len] = chebyshev_coefficients_i1e_A<T>();
-    T y = (x / T{2.0}) - T{2.0};
-    const T out = std::exp(x) * x * chbevl(y, A, len);
-    return (_x < T{0.0}) ? -out : out;
-  }
-  auto [B, len] = chebyshev_coefficients_i1e_B<T>();
-  const T out =
-      (std::exp(x) * chbevl(T{32.0} / x - T{2.0}, B, len)) / std::sqrt(x);
-  return (_x < T{0.0}) ? -out : out;
-}
-
-// Upcast bfloat16/half input to float for numerical accuracy purposes
-inline BFloat16 calc_i1(BFloat16 a) {
-  return calc_i1(static_cast<float>(a));
-}
-inline Half calc_i1(Half a) {
-  return calc_i1(static_cast<float>(a));
-}
-
-/*
- * This function is derived from the implementation of the i1e function in the
- * Cephes Math Library. See note [3-Clause BSD License for the Cephes Math
- * Library].
- *
- * Computes an approximation of the exponentially scaled first order modified
- * Bessel function of the first kind. The approximation is actually two
- * (sub)approximations, both using a Chebyshev polynomial expansion. One
- * approximates the function over [0, 8], and the other over (8, infinity). This
- * function takes the absolute value of all inputs to convert them into the
- * domain of the approximation.
- */
-template <typename T>
-inline typename std::enable_if_t<std::is_floating_point_v<T>, T> calc_i1e(
-    T _x) {
-  T x = std::abs(_x);
-
-  if (x <= T{8.0}) {
-    auto [A, len] = chebyshev_coefficients_i1e_A<T>();
-    T y = (x / T{2.0}) - T{2.0};
-    const T out = chbevl(y, A, len) * x;
-    return (_x < T{0.0}) ? -out : out;
-  }
-  auto [B, len] = chebyshev_coefficients_i1e_B<T>();
-  const auto out = chbevl(T{32.0} / x - T{2.0}, B, len) / std::sqrt(x);
-  return (_x < T{0.0}) ? -out : out;
-}
-
-// Upcast bfloat16/half input to float for numerical accuracy purposes
-inline BFloat16 calc_i1e(BFloat16 a) {
-  return calc_i1e(static_cast<float>(a));
-}
-inline Half calc_i1e(Half a) {
-  return calc_i1e(static_cast<float>(a));
-}
-
 HIDDEN_NAMESPACE_END(torch, headeronly)
 
 C10_CLANG_DIAGNOSTIC_POP()
 
-using torch::headeronly::abs_impl;
 using torch::headeronly::calc_digamma;
 using torch::headeronly::calc_erfinv;
-using torch::headeronly::calc_gcd;
 using torch::headeronly::calc_i0;
 using torch::headeronly::calc_i0e;
-using torch::headeronly::calc_i1;
-using torch::headeronly::calc_i1e;
 using torch::headeronly::calc_igamma;
 using torch::headeronly::calc_igammac;
-using torch::headeronly::calc_polygamma;
 using torch::headeronly::chbevl;
 using torch::headeronly::chebyshev_coefficients_i0e_A;
 using torch::headeronly::chebyshev_coefficients_i0e_B;
-using torch::headeronly::chebyshev_coefficients_i1e_A;
-using torch::headeronly::chebyshev_coefficients_i1e_B;
 using torch::headeronly::exp2_impl;
 using torch::headeronly::polevl;
-using torch::headeronly::trigamma;
-using torch::headeronly::zeta;

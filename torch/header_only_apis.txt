@@ -127,15 +127,16 @@ calc_erfinv
 calc_digamma
 calc_i0
 calc_i0e
-calc_i1
-calc_i1e
 calc_igamma
 calc_igammac
 chbevl
 polevl
-zeta
 exp2_impl
-calc_gcd
+
+# torch/headeronly/util/jiterator_macros.h
+JITERATOR_HOST_DEVICE
+jiterator_code
+jiterator_also_stringify_as
 
 # torch/headeronly/macros/Export.h
 C10_API

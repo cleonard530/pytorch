@@ -18,6 +18,7 @@ set(AOTI_ABI_CHECK_TEST_SRCS
   ${AOTI_ABI_CHECK_TEST_ROOT}/test_exception.cpp
   ${AOTI_ABI_CHECK_TEST_ROOT}/test_headeronlyarrayref.cpp
   ${AOTI_ABI_CHECK_TEST_ROOT}/test_irange.cpp
+  ${AOTI_ABI_CHECK_TEST_ROOT}/test_jiterator_macros.cpp
   ${AOTI_ABI_CHECK_TEST_ROOT}/test_layout.cpp
   ${AOTI_ABI_CHECK_TEST_ROOT}/test_load.cpp
   ${AOTI_ABI_CHECK_TEST_ROOT}/test_macros.cpp
