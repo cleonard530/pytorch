@@ -113,7 +113,7 @@ size
 float2half_scalar
 half2float_scalar
 
-# torch/headeronly/cpu/vec/zmath.h
+# torch/headeronly/native/cpu/zmath.h
 zabs
 angle_impl
 real_impl

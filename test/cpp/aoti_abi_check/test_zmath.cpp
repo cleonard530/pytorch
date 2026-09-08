@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <torch/headeronly/cpu/vec/zmath.h>
+#include <torch/headeronly/native/cpu/zmath.h>
 
 TEST(TestZmath, TestZabsComplex) {
   EXPECT_FLOAT_EQ(

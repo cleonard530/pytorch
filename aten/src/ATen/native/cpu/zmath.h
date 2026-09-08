@@ -1,2 +1,2 @@
 #pragma once
-#include <torch/headeronly/cpu/vec/zmath.h>
+#include <torch/headeronly/native/cpu/zmath.h>
